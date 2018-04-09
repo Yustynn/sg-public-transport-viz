@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const fs = require('fs');
 
 const HEADERS = {
   AccountKey: process.env.LTA_API_KEY,
@@ -14,12 +15,23 @@ async function getBusStopData(stopNum) {
   ).then( res => res.json(), console.error )
 }
 
-const stops = require('./bus-stops.json');
+async function writeJSON(data, filepath='./output.json') {
+  data = JSON.stringify(data);
 
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filepath, data, function(err) {
+        if(err) {
+          return reject(err);
+        }
+
+        resolve()
+    });
+  })
+}
+
+const stops = require('./bus-stops.json');
 const stopNums = stops.map((s) => s.no)
 
-//Promise.all( stopNums.map(getBusStop) )
-
-//getBusStopData('83139').then(console.log)
-
-console.log(stopNums)
+Promise.all( stopNums.slice(0, 480).map(getBusStopData) )
+  .then(writeJSON)
+  .then(() => console.log('written!'))

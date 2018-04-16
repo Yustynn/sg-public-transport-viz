@@ -6,9 +6,9 @@ import os
 
 class Bus_Stop(object):
     def __init__(self):
-        self.stopIDs = self._read_jsons()
+        self.stopIDs = self.read_jsons()
 
-    def _read_jsons(self): #read all the files in the bus-services dir
+    def read_jsons(self): #read all the files in the bus-services dir
         for root, dirs, files in os.walk("./data/bus-services", topdown = False):
             stopIDs = {}
             for service_num, extension in self._get_extension(files):

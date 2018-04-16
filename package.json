@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "csv": "^3.0.2",
+    "node-csv": "^0.1.2"
+  }
+}

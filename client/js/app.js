@@ -10,12 +10,15 @@ basemap.addTo(map);
 let stops;
 let services = {}, serviceType = {};
 
+let busGroup = L.layerGroup().addTo(map);
+let busStopGroup = L.layerGroup().addTo(map);
+
 let routeLayers = {};
 let routeLayerGroup = L.layerGroup().addTo(map);
 
 fetch('../data/bus-stops.json')
   .then((r) => r.json())
-  .then((s) => { stops = s; })
+  .then((s) => { stops = s; showStops(); })
 
 fetch('../data/bus-services.json')
   .then((r) => r.json())
@@ -23,6 +26,17 @@ fetch('../data/bus-services.json')
 
 function getService(bus) {
   return fetch(`../data/bus-services/${bus}.json`).then((r) => r.json())
+}
+
+function showStops() {
+  stops.forEach((s) => {
+    L.circleMarker([s.lat, s.lng], {radius: 2}).addTo(busStopGroup)
+  });
+
+  map.on('zoomend', (e) => {
+    let z = e.target._zoom - 11;
+    busStopGroup.eachLayer((s) => s.setRadius(z));
+  })
 }
 
 function serviceLines() {

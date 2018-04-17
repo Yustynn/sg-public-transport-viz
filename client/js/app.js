@@ -9,8 +9,8 @@ let stops, services = {}, serviceType = {};
 let gui;
 let settings = {
   showBuses: true,
-  showStops: true,
-  showRoutes: true,
+  showStops: false,
+  showRoutes: false,
   animateMap: false
 };
 
@@ -23,9 +23,11 @@ function init() {
   basemap = L.tileLayer(MAP_TILES, {detectRetina: true, maxZoom: 18, minZoom: 12});
   basemap.addTo(map);
 
-  busGroup = L.layerGroup().addTo(map);
-  busStopGroup = L.layerGroup().addTo(map);
-  routeLayerGroup = L.layerGroup().addTo(map);
+  busGroup = L.layerGroup();
+  busStopGroup = L.layerGroup();
+  routeLayerGroup = L.layerGroup();
+
+  busGroup.addTo(map);
 
   fetch('../data/bus-stops.json')
     .then((r) => r.json())

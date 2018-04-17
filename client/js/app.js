@@ -63,18 +63,18 @@ function setLayer(l, v) {
 }
 
 function getService(bus) {
-  return fetch(`../data/bus-services/${bus}.json`).then((r) => r.json())
+  return fetch(`../data/bus-services/${bus}.json`).then((r) => r.json());
 }
 
 function showStops() {
   stops.forEach((s) => {
-    L.circleMarker([s.lat, s.lng], {radius: 2}).addTo(busStopGroup)
+    L.circleMarker([s.lat, s.lng], {radius: 2}).addTo(busStopGroup);
   });
 
   map.on('zoomend', (e) => {
     let z = e.target._zoom - 11;
     busStopGroup.eachLayer((s) => s.setRadius(z));
-  })
+  });
 }
 
 function serviceLines() {

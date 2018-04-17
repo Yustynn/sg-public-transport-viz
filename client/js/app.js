@@ -6,6 +6,14 @@ let busGroup, busStopGroup;
 let routeLayerGroup, routeLayers = {};
 let stops, services = {}, serviceType = {};
 
+let gui;
+let settings = {
+  showBuses: true,
+  showStops: true,
+  showRoutes: true,
+  animateMap: false
+};
+
 init();
 
 function init() {
@@ -33,6 +41,25 @@ function init() {
       serviceType = s.types;
       serviceLines();
     });
+
+  gui = new dat.GUI({resizable: false});
+
+  gui.add(settings, 'showBuses').onFinishChange((v) => setLayer(busGroup, v));
+  gui.add(settings, 'showStops').onFinishChange((v) => setLayer(busStopGroup, v));
+  gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(routeLayerGroup, v));
+  gui.add(settings, 'animateMap').onFinishChange(animate);
+
+  gui.close();
+}
+
+function animate() {
+  if ( ! settings.animateMap ) return;
+
+  setTimeout(animate, 1000);
+}
+
+function setLayer(l, v) {
+  map[(v === true ? 'add' : 'remove') + 'Layer'](l);
 }
 
 function getService(bus) {

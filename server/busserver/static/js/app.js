@@ -55,7 +55,7 @@ function init() {
 
   busGroup.addTo(map);
 
-  fetch('/data/processed.min.json')
+  fetch('/static/js/processed.min.json')
     .then((r) => r.json())
     .then((s) => {
       stops = s.stops;
@@ -64,7 +64,7 @@ function init() {
       serviceType = s.types;
       showServices();
 
-      fetch('/data/bus-stops-services.json')
+      fetch('/static/js/bus-stops-services.json')
         .then((r) => r.json())
         .then((d) => {
           Object.keys(d).forEach((s_no) => {

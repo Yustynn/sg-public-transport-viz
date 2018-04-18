@@ -10,6 +10,7 @@ module.exports = {
   },
   rules: {
     'indent': [1, 2],
+    'no-unused-vars': [1],
     'semi': [1, 'always'],
     'quotes': [1, 'single']
   }

@@ -18,11 +18,15 @@ let settings = {
 let routeFilters = {
   showLoop: false,
   showTrunk: true,
+  minStops: 1,
+  maxStops: 110,
   minLength: 0,
   maxLength: 75
 };
 
 let stopFilters = {
+  minBuses: 1,
+  maxBuses: 40,
   show1: true,
   show9: true,
   showOthers: false
@@ -52,7 +56,17 @@ function init() {
       serviceType = s.types;
       showServices();
 
-      updateStopFilters();
+      fetch('/data/bus-stops-services.json')
+        .then((r) => r.json())
+        .then((d) => {
+          Object.keys(d).forEach((s_no) => {
+            if ( s_no in stops ) {
+              stops[s_no].buses = d[s_no];
+            }
+          });
+          updateStopFilters();
+        });
+
       updateRouteFilters();
 
       map.on('zoomend', (e) => {
@@ -77,6 +91,8 @@ function init() {
   guiSFilter.add(stopFilters, 'show1').onFinishChange(updateStopFilters);
   guiSFilter.add(stopFilters, 'show9').onFinishChange(updateStopFilters);
   guiSFilter.add(stopFilters, 'showOthers').onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'maxBuses', 1, 40).onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'minBuses', 1, 40).onFinishChange(updateStopFilters);
 
   gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(map, serviceRouteGroup, v));
 
@@ -84,6 +100,8 @@ function init() {
 
   guiRFilter.add(routeFilters, 'showLoop').onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'showTrunk').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'maxStops', 1, 110).onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'minStops', 1, 110).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'maxLength', 0, 75).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'minLength', 0, 75).onFinishChange(updateRouteFilters);
 
@@ -150,23 +168,20 @@ function showServices() {
   });
 }
 
-function filterRouteLength(r) {
-  let minLength = routeFilters.minLength || 0;
-  let maxLength = routeFilters.maxLength || 75;
-  return (r.route_length > minLength && r.route_length < maxLength);
-}
-
-function filterType(r) {
+function updateRouteFilters() {
   let showLoop = routeFilters.showLoop;
   let showTrunk = routeFilters.showTrunk;
-  return ((r.loop && showLoop) || ((!r.loop) && showTrunk));
-}
+  let minStops = routeFilters.minStops || 1;
+  let maxStops = routeFilters.maxStops || 110;
+  let minLength = routeFilters.minLength || 0;
+  let maxLength = routeFilters.maxLength || 75;
 
-function updateRouteFilters() {
   let show;
   Object.keys(services).forEach((s_no) => {
     services[s_no].routes.forEach((r) => {
-      show = filterType(r) && filterRouteLength(r);
+      show = (((r.loop && showLoop) || (!r.loop && showTrunk))) &&
+        (r.stops.length > minStops && r.stops.length < maxStops) &&
+        (r.route_length > minLength && r.route_length < maxLength);
       setLayer(serviceRouteGroup, r.line, show);
     });
   });
@@ -182,10 +197,14 @@ function updateStopFilters() {
     9: stopFilters.show9
   };
 
+  let minBuses = stopFilters.minBuses || 1;
+  let maxBuses = stopFilters.maxBuses || 40;
+
   let show, s;
   Object.keys(stops).forEach((s_no) => {
     s = stops[s_no];
-    show = showStopSides[s.side];
+    show = showStopSides[s.side] &&
+      (s.buses.length > minBuses && s.buses.length < maxBuses);
     setLayer(busStopGroup, s.marker, show);
   });
 }

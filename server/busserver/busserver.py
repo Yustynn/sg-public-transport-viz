@@ -1,7 +1,11 @@
 from flask import Flask, send_from_directory
 
+from busserver import api
+
 app = Flask(__name__)
 app.config.from_object(__name__)
+
+app.register_blueprint(api.bp)
 
 
 @app.route('/')

@@ -99,8 +99,8 @@ function init() {
   guiSFilter.add(stopFilters, 'show1').onFinishChange(updateStopFilters);
   guiSFilter.add(stopFilters, 'show9').onFinishChange(updateStopFilters);
   guiSFilter.add(stopFilters, 'showOthers').onFinishChange(updateStopFilters);
-  guiSFilter.add(stopFilters, 'maxBuses', 1, 40).onFinishChange(updateStopFilters);
-  guiSFilter.add(stopFilters, 'minBuses', 1, 40).onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'maxBuses', 1, 40, 1).onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'minBuses', 1, 40, 1).onFinishChange(updateStopFilters);
 
   gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(map, serviceRouteGroup, v));
 
@@ -110,8 +110,8 @@ function init() {
   guiRFilter.add(routeFilters, 'showTrunk').onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'showFeeder').onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'showLoop', loopOptions).onFinishChange(updateRouteFilters);
-  guiRFilter.add(routeFilters, 'maxStops', 1, 110).onFinishChange(updateRouteFilters);
-  guiRFilter.add(routeFilters, 'minStops', 1, 110).onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'maxStops', 1, 110, 1).onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'minStops', 1, 110, 1).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'maxLength', 0, 75).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'minLength', 0, 75).onFinishChange(updateRouteFilters);
 

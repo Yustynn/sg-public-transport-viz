@@ -1,1 +1,1 @@
-from .busserver import app
+from .busserver import app # noqa

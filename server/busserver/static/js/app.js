@@ -30,14 +30,14 @@ function init() {
 
   busGroup.addTo(map);
 
-  fetch('../data/bus-stops.json')
+  fetch('/data/bus-stops.json')
     .then((r) => r.json())
     .then((s) => {
       stops = s;
       showStops();
     });
 
-  fetch('../data/bus-services.json')
+  fetch('/data/bus-services.json')
     .then((r) => r.json())
     .then((s) => {
       services = s.services;
@@ -68,7 +68,7 @@ function setLayer(l, v) {
 }
 
 function getService(bus) {
-  return fetch(`../data/bus-services/${bus}.json`).then((r) => r.json());
+  return fetch(`/data/bus-services/${bus}.json`).then((r) => r.json());
 }
 
 function showStops() {

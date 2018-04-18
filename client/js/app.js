@@ -5,6 +5,7 @@ let map, basemap;
 let busGroup, busStopGroup;
 let routeLayerGroup, routeLayers = {};
 let stops, services = {}, serviceType = {};
+let buses = {};
 
 let gui;
 let settings = {
@@ -43,6 +44,8 @@ function init() {
       serviceType = s.types;
       serviceLines();
     });
+
+  getBuses();
 
   gui = new dat.GUI({resizable: false});
 
@@ -89,4 +92,28 @@ function serviceLines() {
     let pts = b[1].route.map((p) => p.split(',').map(parseFloat));
     L.polyline(pts).addTo(routeLayers[s.type]);
   }));
+}
+
+function getBuses() {
+  let bounds = map.getBounds().toBBoxString();
+  fetch(`/api/buses?bounds=${bounds}`)
+    .then((r) => r.json())
+    .then((d) => {
+      d.buses.map(updateBus);
+    });
+}
+
+function updateBus(details) {
+  let [ busID, stop, service, arrival, lat, lng, timestamp ] = details;
+
+  let latlng = [lat, lng].map(parseFloat);
+  if ( latlng.some((l) => !l) ) {
+    return;
+  }
+
+  if ( busID in buses ) {
+    buses[busID].setLatLng(latlng);
+  } else {
+    buses[busID] = L.circleMarker(latlng, {radius: 2}).addTo(busGroup);
+  }
 }

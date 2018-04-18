@@ -22,6 +22,12 @@ let routeFilters = {
   maxLength: 75
 };
 
+let stopFilters = {
+  show1: true,
+  show9: true,
+  showOthers: false
+};
+
 init();
 
 function init() {
@@ -46,6 +52,7 @@ function init() {
       serviceType = s.types;
       showServices();
 
+      updateStopFilters();
       updateRouteFilters();
 
       map.on('zoomend', (e) => {
@@ -64,6 +71,13 @@ function init() {
 
   gui.add(settings, 'showBuses').onFinishChange((v) => setLayer(map, busGroup, v));
   gui.add(settings, 'showStops').onFinishChange((v) => setLayer(map, busStopGroup, v));
+
+  let guiSFilter = gui.addFolder('stop filters');
+
+  guiSFilter.add(stopFilters, 'show1').onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'show9').onFinishChange(updateStopFilters);
+  guiSFilter.add(stopFilters, 'showOthers').onFinishChange(updateStopFilters);
+
   gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(map, serviceRouteGroup, v));
 
   let guiRFilter = gui.addFolder('route filters');
@@ -122,7 +136,7 @@ function showServices() {
     0: '#d8b365',
     1: '#3388ff',
     2: '#ff8833'
-  }
+  };
 
   Object.keys(services).forEach((s_no) => {
     services[s_no].routes.forEach((r) => {
@@ -155,6 +169,24 @@ function updateRouteFilters() {
       show = filterType(r) && filterRouteLength(r);
       setLayer(serviceRouteGroup, r.line, show);
     });
+  });
+}
+
+function updateStopFilters() {
+  let showStopSides = {
+    1: stopFilters.show1,
+    2: stopFilters.showOthers,
+    3: stopFilters.showOthers,
+    7: stopFilters.showOthers,
+    8: stopFilters.showOthers,
+    9: stopFilters.show9
+  };
+
+  let show, s;
+  Object.keys(stops).forEach((s_no) => {
+    s = stops[s_no];
+    show = showStopSides[s.side];
+    setLayer(busStopGroup, s.marker, show);
   });
 }
 

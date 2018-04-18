@@ -16,3 +16,9 @@ tags
 *.DS_Store
 
 data/node_modules
+
+# Python
+Pipfile.lock
+__pycache__/
+*.pyc
+.env

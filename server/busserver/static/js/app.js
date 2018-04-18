@@ -2,8 +2,8 @@ const MAP_TILES = 'https://maps-{s}.onemap.sg/v3/Night/{z}/{x}/{y}.png';
 const BOUNDS = [[1.56073, 104.11475], [1.16, 103.502]];
 
 let map, basemap;
+let serviceRouteGroup;
 let busGroup, busStopGroup;
-let routeLayerGroup, routeLayers = {};
 let stops, services = {}, serviceType = {};
 let buses = {};
 
@@ -13,6 +13,13 @@ let settings = {
   showStops: false,
   showRoutes: false,
   animateMap: false
+};
+
+let routeFilters = {
+  showLoop: false,
+  showTrunk: true,
+  minLength: 0,
+  maxLength: 75
 };
 
 init();
@@ -26,32 +33,46 @@ function init() {
 
   busGroup = L.layerGroup();
   busStopGroup = L.layerGroup();
-  routeLayerGroup = L.layerGroup();
+  serviceRouteGroup = L.layerGroup();
 
   busGroup.addTo(map);
 
-  fetch('/data/bus-stops.json')
+  fetch('/data/processed.min.json')
     .then((r) => r.json())
     .then((s) => {
-      stops = s;
+      stops = s.stops;
       showStops();
-    });
-
-  fetch('/data/bus-services.json')
-    .then((r) => r.json())
-    .then((s) => {
       services = s.services;
       serviceType = s.types;
-      serviceLines();
+      showServices();
+
+      updateRouteFilters();
+
+      map.on('zoomend', (e) => {
+        let z = e.target._zoom - 11;
+        let n = {
+          stroke: z < 3 ? 2 : 3
+        };
+        busStopGroup.eachLayer((s) => s.setRadius(z));
+        serviceRouteGroup.eachLayer((s) => s.setStyle(n));
+      });
     });
 
   getBuses();
 
   gui = new dat.GUI({resizable: false});
 
-  gui.add(settings, 'showBuses').onFinishChange((v) => setLayer(busGroup, v));
-  gui.add(settings, 'showStops').onFinishChange((v) => setLayer(busStopGroup, v));
-  gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(routeLayerGroup, v));
+  gui.add(settings, 'showBuses').onFinishChange((v) => setLayer(map, busGroup, v));
+  gui.add(settings, 'showStops').onFinishChange((v) => setLayer(map, busStopGroup, v));
+  gui.add(settings, 'showRoutes').onFinishChange((v) => setLayer(map, serviceRouteGroup, v));
+
+  let guiRFilter = gui.addFolder('route filters');
+
+  guiRFilter.add(routeFilters, 'showLoop').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'showTrunk').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'maxLength', 0, 75).onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'minLength', 0, 75).onFinishChange(updateRouteFilters);
+
   gui.add(settings, 'animateMap').onFinishChange(animate);
 
   gui.close();
@@ -63,35 +84,78 @@ function animate() {
   setTimeout(animate, 1000);
 }
 
-function setLayer(l, v) {
-  map[(v === true ? 'add' : 'remove') + 'Layer'](l);
-}
-
-function getService(bus) {
-  return fetch(`/data/bus-services/${bus}.json`).then((r) => r.json());
+function setLayer(g, l, v) {
+  let visible = g.hasLayer(l);
+  if ( v === undefined ) { v = !visible; }
+  if ( v && (!visible) ) {
+    g.addLayer(l);
+  } else if ( (!v) && visible ) {
+    g.removeLayer(l);
+  }
 }
 
 function showStops() {
-  stops.forEach((s) => {
-    L.circleMarker([s.lat, s.lng], {radius: 2}).addTo(busStopGroup);
-  });
+  const colors = {
+    1: '#3388ff',
+    2: '#d8b365',
+    3: '#af8dc3',
+    7: '#7fbf7b',
+    8: '#5ab4ac',
+    9: '#ff8833'
+  };
 
-  map.on('zoomend', (e) => {
-    let z = e.target._zoom - 11;
-    busStopGroup.eachLayer((s) => s.setRadius(z));
+  Object.keys(stops).forEach((s_no) => {
+    let s = stops[s_no];
+    let color = colors[s.side];
+    let tooltip = `${s_no}: ${s.name}`;
+    let prop = {
+      color,
+      radius: 2
+    };
+
+    stops[s_no].marker = L.circleMarker(s.latlng, prop);
   });
 }
 
-function serviceLines() {
-  Object.keys(serviceType).forEach((k) => {
-    routeLayers[k] = L.layerGroup().addTo(routeLayerGroup);
-  });
+function showServices() {
+  const colors = {
+    0: '#d8b365',
+    1: '#3388ff',
+    2: '#ff8833'
+  }
 
-  services.forEach((s) => getService(s.no).then((b) => {
-    if ( !b[1].route ) return;
-    let pts = b[1].route.map((p) => p.split(',').map(parseFloat));
-    L.polyline(pts).addTo(routeLayers[s.type]);
-  }));
+  Object.keys(services).forEach((s_no) => {
+    services[s_no].routes.forEach((r) => {
+      let color = colors[r.loop ? 0 : r.direction];
+      let prop = {
+        color,
+        weight: 2
+      };
+      r.line = L.polyline(r.polyline, prop);
+    });
+  });
+}
+
+function filterRouteLength(r) {
+  let minLength = routeFilters.minLength || 0;
+  let maxLength = routeFilters.maxLength || 75;
+  return (r.route_length > minLength && r.route_length < maxLength);
+}
+
+function filterType(r) {
+  let showLoop = routeFilters.showLoop;
+  let showTrunk = routeFilters.showTrunk;
+  return ((r.loop && showLoop) || ((!r.loop) && showTrunk));
+}
+
+function updateRouteFilters() {
+  let show;
+  Object.keys(services).forEach((s_no) => {
+    services[s_no].routes.forEach((r) => {
+      show = filterType(r) && filterRouteLength(r);
+      setLayer(serviceRouteGroup, r.line, show);
+    });
+  });
 }
 
 function getBuses() {

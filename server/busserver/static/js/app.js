@@ -1,6 +1,12 @@
 const MAP_TILES = 'https://maps-{s}.onemap.sg/v3/Night/{z}/{x}/{y}.png';
 const BOUNDS = [[1.56073, 104.11475], [1.16, 103.502]];
 
+const loopOptions = {
+  'non-looping only': 0,
+  'looping only': 1,
+  'both': 2
+};
+
 let map, basemap;
 let serviceRouteGroup;
 let busGroup, busStopGroup;
@@ -16,8 +22,10 @@ let settings = {
 };
 
 let routeFilters = {
-  showLoop: false,
+  showLoop: 0,
+  showNight: true,
   showTrunk: true,
+  showFeeder: true,
   minStops: 1,
   maxStops: 110,
   minLength: 0,
@@ -98,8 +106,10 @@ function init() {
 
   let guiRFilter = gui.addFolder('route filters');
 
-  guiRFilter.add(routeFilters, 'showLoop').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'showNight').onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'showTrunk').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'showFeeder').onFinishChange(updateRouteFilters);
+  guiRFilter.add(routeFilters, 'showLoop', loopOptions).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'maxStops', 1, 110).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'minStops', 1, 110).onFinishChange(updateRouteFilters);
   guiRFilter.add(routeFilters, 'maxLength', 0, 75).onFinishChange(updateRouteFilters);
@@ -169,17 +179,24 @@ function showServices() {
 }
 
 function updateRouteFilters() {
+  let showRouteTypes = {
+    0: routeFilters.showTrunk,
+    1: routeFilters.showFeeder,
+    2: routeFilters.showNight
+  };
+
   let showLoop = routeFilters.showLoop;
-  let showTrunk = routeFilters.showTrunk;
   let minStops = routeFilters.minStops || 1;
   let maxStops = routeFilters.maxStops || 110;
   let minLength = routeFilters.minLength || 0;
   let maxLength = routeFilters.maxLength || 75;
 
-  let show;
+  let show, s;
   Object.keys(services).forEach((s_no) => {
-    services[s_no].routes.forEach((r) => {
-      show = (((r.loop && showLoop) || (!r.loop && showTrunk))) &&
+    s = services[s_no];
+    s.routes.forEach((r) => {
+      show = showRouteTypes[s.type] &&
+        (showLoop == loopOptions.both || showLoop == r.loop) &&
         (r.stops.length > minStops && r.stops.length < maxStops) &&
         (r.route_length > minLength && r.route_length < maxLength);
       setLayer(serviceRouteGroup, r.line, show);

@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 
+from . import buslogic
+
 bp = Blueprint('api', __name__, url_prefix='/api')
 
 
@@ -8,7 +10,7 @@ def buses():
     bounds = request.args.get('bounds', '103.61,1.26,104.00,1.46')
     bounds = tuple(float(i) for i in bounds.split(','))
 
-    buses = []
+    buses = buslogic.get_buses_fake(bounds)
 
     return jsonify({
         'buses': buses,

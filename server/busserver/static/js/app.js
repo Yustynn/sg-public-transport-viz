@@ -123,6 +123,8 @@ function init() {
 function animate() {
   if ( ! settings.animateMap ) return;
 
+  getBuses();
+
   setTimeout(animate, 1000);
 }
 

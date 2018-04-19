@@ -1,3 +1,7 @@
+/**
+ * SETUP 
+ **/
+
 const fetch = require('node-fetch');
 const fs = require('fs');
 const stringify = require('csv-stringify');
@@ -7,6 +11,9 @@ const HEADERS = {
   accept: 'application/json'
 }
 
+/**
+ * Promisify functions 
+ **/
 async function getBusStopData(stopNum) {
   const url = `http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=${stopNum}`
 
@@ -16,10 +23,34 @@ async function getBusStopData(stopNum) {
   ).then( res => res.json(), console.error )
 }
 
+function promisifiedStringify(data) {
+  return new Promise((resolve, reject) => {
+    stringify(data, (err, res) => {
+      if (err) return reject(err);
+      return resolve(res);
+    })
+  })
+}
+
+function promisifiedWriteFile(filepath, data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filepath, data, (err) => err ? reject(err): resolve(data))
+  })
+}
+
+async function writeCSV(data, filepath='./output.csv') {
+  data = await promisifiedStringify(data);
+  return promisifiedWriteFile(filepath, data);
+}
+
 function writeJSON(data, filepath='./output.json') {
   data = JSON.stringify(data);
   return promisifiedWriteFile(data);
 }
+
+/**
+ * Processing functions
+ **/
 
 function processData(data) {
   const cols = [
@@ -52,34 +83,18 @@ function processData(data) {
   return processed;
 }
 
-function promisifiedStringify(data) {
-  return new Promise((resolve, reject) => {
-    stringify(data, (err, res) => {
-      if (err) return reject(err);
-      return resolve(res);
-    })
-  })
-}
+/**
+ * Utility
+ **/
 
-function promisifiedWriteFile(filepath, data) {
-  return new Promise((resolve, reject) => {
-    fs.writeFile(filepath, data, (err) => err ? reject(err): resolve(data))
-  })
-}
+const getTimestamp = () => new Date(Date.now()).toLocaleTimeString();
 
-async function writeCSV(data, filepath='./output.csv') {
-  data = await promisifiedStringify(data);
-  return promisifiedWriteFile(filepath, data);
-}
-
+/**
+ * Main Logic
+ **/
 
 const stops = require('./bus-stops.json');
 const stopNums = stops.map((s) => s.no);
-
-const data = require('./output.json');
-writeCSV(data);
-
-const getTimestamp = () => new Date(Date.now()).toLocaleTimeString();
 
 async function getData(timeout=0, numRuns=600, queriesPerRun=25, _runCount=0) {
   if (!fs.existsSync('output')){
@@ -107,5 +122,12 @@ async function getData(timeout=0, numRuns=600, queriesPerRun=25, _runCount=0) {
       getData(timeout, numRuns, queriesPerRun, _runCount);
     })
 }
+
+
+
+
+//const data = require('./output.json');
+//writeCSV(data);
+
 
 getData()

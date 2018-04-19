@@ -9,8 +9,8 @@ class Bus_Stop(object):
         self.stopIDs = self.read_jsons()
 
     def read_jsons(self): #read all the files in the bus-services dir
-        for root, dirs, files in os.walk("./data/bus-services", topdown = False):
-            stopIDs = {}
+        stopIDs = {}
+        for root, dirs, files in os.walk("./bus-services", topdown = False):
             for service_num, extension in self._get_extension(files):
                 if extension == ".json":
                     # print(os.path.join(root, filename + extension))
@@ -21,6 +21,7 @@ class Bus_Stop(object):
                         #some buses have empty lists for direction 2 e.g. bus 24
                         if not stopIDs[service_num]['2']: #i.e. if stopIDs[service_num]['2'] is an empty list
                             stopIDs[service_num]['2'] = stopIDs[service_num]['1'][::-1] #assume direction 2 is the reverse of the direction 1
+
         return stopIDs
 
     def getStopIDs(self, service_num, direction=1):
@@ -32,7 +33,7 @@ class Bus_Stop(object):
             return self.stopIDs[service_num][direction]
         except KeyError:
             raise Exception('Service number does not exist.')
-            
+
     def _get_extension(self, files):
         for file in files:
             yield os.path.splitext(file)
@@ -40,4 +41,4 @@ class Bus_Stop(object):
 #Example usage:
 if __name__ == "__main__":
     stops = Bus_Stop()
-    print(stops.getStopIDs(service_num=24, direction=1))
+    print(stops.getStopIDs(service_num=12, direction=1))

@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^2.4.1",
+    "csv-stringify": "^3.0.0",
     "fetch": "^1.1.0",
     "node-fetch": "^2.1.2"
   }

@@ -1,0 +1,43 @@
+{
+    "odata.metadata": "http://datamall2.mytransport.sg/ltaodataservice/$metadata#BusArrivalv2/@Element",
+    "BusStopCode": "83139",
+    "Services": [
+        {
+            "ServiceNo": "15",
+            "Operator": "GAS",
+            "NextBus": {
+                "OriginCode": "77009",
+                "DestinationCode": "77009",
+                "EstimatedArrival": "2018-04-28T15:21:58+08:00",
+                "Latitude": "1.3269166666666665",
+                "Longitude": "103.90597416666667",
+                "VisitNumber": "1",
+                "Load": "SEA",
+                "Feature": "WAB",
+                "Type": "SD"
+            },
+            "NextBus2": {
+                "OriginCode": "77009",
+                "DestinationCode": "77009",
+                "EstimatedArrival": "2018-04-28T15:30:00+08:00",
+                "Latitude": "1.3360638333333332",
+                "Longitude": "103.91207983333334",
+                "VisitNumber": "1",
+                "Load": "SEA",
+                "Feature": "WAB",
+                "Type": "SD"
+            },
+            "NextBus3": {
+                "OriginCode": "77009",
+                "DestinationCode": "77009",
+                "EstimatedArrival": "2018-04-28T15:39:28+08:00",
+                "Latitude": "1.3450445",
+                "Longitude": "103.93674316666667",
+                "VisitNumber": "1",
+                "Load": "SEA",
+                "Feature": "WAB",
+                "Type": "SD"
+            }
+        }
+    ]
+}

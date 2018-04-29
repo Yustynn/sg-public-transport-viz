@@ -106,7 +106,6 @@ def process_route(direction, details):
         'progress': prog,
         'polyline': polyline,
         'route_length': r_len,
-        'num_stops': len(r_stops),
         'direction': int(direction),
         'stop_polyline': tuple(stop_polyline),
         'loop': int(r_stops[0] == r_stops[-1]),

@@ -6,52 +6,100 @@ from datetime import datetime
 buses = []
 stops = None
 services = None
+KEYS = ('busID', 'stop', 'service', 'arrival', 'lat', 'lng', 'timestamp')
 
 with open('busserver/static/js/processed.min.json') as f:
     data = json.load(f)
     stops = data['stops']
     services = data['services']
 
-for s_no, service in services.items():
-    if service.get('type') == 2:
-        continue
+j = 0
+scraped_buses = []
+processed_buses = {}
+with open('scraped_buses.csv') as f:
+    for line in f:
+        s_no, stop_no, arr, lat, lng, ts = line.strip().split(',')
 
-    busID = '%s:%d' % (s_no, 0)
-    route = service['routes'][0]
-    stop_no = route['stops'][0]
-    lat, lng = 0, 0
-    try:
-        lat, lng = stops[stop_no]['latlng']
-    except (KeyError, ValueError):
-        pass
+        try:
+            lat, lng = float(lat), float(lng)
+        except ValueError:
+            continue
 
+        svc = services.get(s_no)
+
+        if svc is None:
+            continue
+
+        arr = int(arr)
+        s_dir = -1
+        stop_idx = -1
+
+        for r, route in enumerate(svc['routes']):
+            try:
+                stop_idx = route['stops'].index(stop_no)
+                s_dir = r
+            except ValueError:
+                continue
+
+        busID = "%s:%d" % (s_no, s_dir)
+        ts = tuple(int(i) for i in ts[1:-1].split(':'))
+
+        if busID not in processed_buses:
+            processed_buses[busID] = []
+
+        scraped_buses.append({
+            'stop': stop_no,
+            'service': s_no,
+            'arrival': arr,
+            'lat': lat, 'lng': lng,
+            'timestamp': ts,
+        })
+
+        processed_buses[busID].append((ts, stop_idx, j))
+        j += 1
+
+#scraped_buses.sort(key=lambda x: x['timestamp'])
+
+del processed_buses['136:1']
+del processed_buses['139:1']
+
+for b_id in processed_buses:
+    processed_buses[b_id].sort()
+    b = processed_buses[b_id]
+    dirty = None
+    prev_id = b[0][1]
+    for i in range(len(b) - 1):
+        if prev_id > b[i + 1][1]:
+            dirty = i
+            break
+        prev_id = b[i + 1][1]
+
+    if dirty is not None:
+        processed_buses[b_id] = b[:dirty]
+
+for busID, b in processed_buses.items():
     buses.append({
         'busID': busID,
-        'stop': stop_no,
-        'service': s_no,
-        'arrival': '',
-        'lat': lat, 'lng': lng,
-        'timestamp': '',
+        **scraped_buses[b[0][2]],
     })
 
 
-def get_buses_fake(bounds):
-    keys = ('busID', 'stop', 'service', 'arrival', 'lat', 'lng', 'timestamp')
-    now = int(round(mktime(datetime.now().timetuple())))
+
+
+def get_buses_single(bounds):
     min_lng, min_lat, max_lng, max_lat = bounds
 
-    timestep = now
+    tm = datetime.now().timetuple()
+    mn = tm.tm_min
+
     show_bus = []
 
     for bus in buses:
-        polyline = services[bus['service']]['routes'][0]['polyline']
-        bus['lat'], bus['lng'] = polyline[timestep % len(polyline)]
-
         if not (min_lat < bus['lat'] < max_lat):
             continue
         if not (min_lng < bus['lng'] < max_lng):
             continue
 
-        show_bus.append(tuple(bus[k] for k in keys))
+        show_bus.append(tuple(bus[k] for k in KEYS))
 
     return tuple(show_bus)

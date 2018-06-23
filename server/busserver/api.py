@@ -10,7 +10,7 @@ def buses():
     bounds = request.args.get('bounds', '103.61,1.26,104.00,1.46')
     bounds = tuple(float(i) for i in bounds.split(','))
 
-    buses = buslogic.get_buses_fake(bounds)
+    buses = buslogic.get_buses_single(bounds)
 
     return jsonify({
         'buses': buses,

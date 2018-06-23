@@ -1,0 +1,19 @@
+html {
+  background-color: #003652;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  color: #ff8833;
+  padding: 20px;
+}
+
+.bar rect {
+  fill: steelblue;
+}
+
+.bar text {
+  fill: #fff;
+  font: 10px sans-serif;
+}
